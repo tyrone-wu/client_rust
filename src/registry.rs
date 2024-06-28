@@ -172,6 +172,78 @@ impl Registry {
         self.metrics.push((descriptor, Box::new(metric)));
     }
 
+    /// Unregisters a [`Family`](`crate::metrics::family::Family`) from the
+    /// provided [`Registry`] given the MetricFamily's name and unit (if
+    /// present).
+    ///
+    /// Returns a `bool` indicating if the `Family` was removed from the
+    /// `Registry` or not.
+    ///
+    /// ```
+    /// # use prometheus_client::encoding::text::encode;
+    /// # use prometheus_client::metrics::counter::Counter;
+    /// # use prometheus_client::metrics::gauge::Gauge;
+    /// # use prometheus_client::registry::{Registry, Unit};
+    /// #
+    /// // Initialize registry with a counter and gauge metric family.
+    /// let mut registry = Registry::default();
+    ///
+    /// let counter: Counter = Counter::default();
+    /// let gauge: Gauge = Gauge::default();
+    ///
+    /// registry.register_with_unit("my_counter","This is my counter", Unit::Seconds, counter.clone());
+    /// registry.register("my_gauge","This is my gauge", gauge.clone());
+    ///
+    /// # // Encode all metrics in the registry in the text format.
+    /// # let mut buffer = String::new();
+    /// # encode(&mut buffer, &registry).unwrap();
+    /// #
+    /// # let expected = "# HELP my_counter_seconds This is my counter.\n".to_owned() +
+    /// #                "# TYPE my_counter_seconds counter\n" +
+    /// #                "# UNIT my_counter_seconds seconds\n" +
+    /// #                "my_counter_seconds_total 0\n" +
+    /// #                "# HELP my_gauge This is my gauge.\n" +
+    /// #                "# TYPE my_gauge gauge\n" +
+    /// #                "my_gauge 0\n" +
+    /// #                "# EOF\n";
+    /// # assert_eq!(expected, buffer);
+    /// #
+    /// // Unregister counter metric family.
+    /// let is_removed = registry.unregister("my_counter", Some(&Unit::Seconds));
+    /// assert!(is_removed);
+    /// #
+    /// # // Encoded metrics should result in only the gauge metric.
+    /// # buffer.clear();
+    /// # encode(&mut buffer, &registry).unwrap();
+    /// #
+    /// # let expected = "# HELP my_gauge This is my gauge.\n".to_owned() +
+    /// #                "# TYPE my_gauge gauge\n" +
+    /// #                "my_gauge 0\n" +
+    /// #                "# EOF\n";
+    /// # assert_eq!(expected, buffer);
+    /// ```
+    pub fn unregister<N: Into<String>>(&mut self, name: N, unit: Option<&Unit>) -> bool {
+        let name = name.into();
+        let idx_opt = self.metrics.iter().position(|(desc, _)| {
+            desc.name == name
+                && match (unit, desc.unit.as_ref()) {
+                    (Some(unit), Some(descriptor_unit)) => {
+                        unit.as_str() == descriptor_unit.as_str()
+                    }
+                    (None, None) => true,
+                    _ => false,
+                }
+        });
+
+        match idx_opt {
+            Some(idx) => {
+                self.metrics.swap_remove(idx);
+                true
+            }
+            None => false,
+        }
+    }
+
     /// Register a [`Collector`].
     ///
     /// ```
