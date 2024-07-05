@@ -262,6 +262,32 @@ impl Atomic<f64> for AtomicU64 {
     }
 }
 
+impl Atomic<u64> for AtomicU64 {
+    fn inc(&self) -> u64 {
+        self.inc_by(1)
+    }
+
+    fn inc_by(&self, v: u64) -> u64 {
+        self.fetch_add(v, Ordering::Relaxed)
+    }
+
+    fn dec(&self) -> u64 {
+        self.dec_by(1)
+    }
+
+    fn dec_by(&self, v: u64) -> u64 {
+        self.fetch_sub(v, Ordering::Relaxed)
+    }
+
+    fn set(&self, v: u64) -> u64 {
+        self.swap(v, Ordering::Relaxed)
+    }
+
+    fn get(&self) -> u64 {
+        self.load(Ordering::Relaxed)
+    }
+}
+
 impl<N, A> TypedMetric for Gauge<N, A> {
     const TYPE: MetricType = MetricType::Gauge;
 }

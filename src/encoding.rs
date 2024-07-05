@@ -562,6 +562,12 @@ impl EncodeGaugeValue for f64 {
     }
 }
 
+impl EncodeGaugeValue for u64 {
+    fn encode(&self, encoder: &mut GaugeValueEncoder) -> Result<(), std::fmt::Error> {
+        encoder.encode_u64(*self)
+    }
+}
+
 /// Encoder for a gauge value.
 #[derive(Debug)]
 pub struct GaugeValueEncoder<'a>(GaugeValueEncoderInner<'a>);
@@ -584,6 +590,10 @@ impl<'a> GaugeValueEncoder<'a> {
 
     fn encode_f64(&mut self, v: f64) -> Result<(), std::fmt::Error> {
         for_both_mut!(self, GaugeValueEncoderInner, e, e.encode_f64(v))
+    }
+
+    fn encode_u64(&mut self, v: u64) -> Result<(), std::fmt::Error> {
+        for_both_mut!(self, GaugeValueEncoderInner, e, e.encode_u64(v))
     }
 }
 

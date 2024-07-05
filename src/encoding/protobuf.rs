@@ -336,6 +336,11 @@ impl<'a> GaugeValueEncoder<'a> {
         *self.value = openmetrics_data_model::gauge_value::Value::DoubleValue(v);
         Ok(())
     }
+
+    pub fn encode_u64(&mut self, v: u64) -> Result<(), std::fmt::Error> {
+        *self.value = openmetrics_data_model::gauge_value::Value::IntValue(v);
+        Ok(())
+    }
 }
 
 #[derive(Debug)]

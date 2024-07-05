@@ -440,6 +440,12 @@ impl<'a> GaugeValueEncoder<'a> {
         self.writer.write_str(dtoa::Buffer::new().format(v))?;
         Ok(())
     }
+
+    pub fn encode_u64(&mut self, v: u64) -> Result<(), std::fmt::Error> {
+        self.writer.write_str(" ")?;
+        self.writer.write_str(itoa::Buffer::new().format(v))?;
+        Ok(())
+    }
 }
 
 pub(crate) struct ExemplarValueEncoder<'a> {
